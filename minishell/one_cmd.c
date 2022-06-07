@@ -153,7 +153,7 @@ int ft_one(char **split_pipe, char **envp, int *code_caractere)
 			ft_check_quote(cmd, i);
 			i++;
 		}
-    	execute_inbuilt(cmd);
+    	execute_inbuilt(cmd, envp);
 		if (ft_check_builtins(cmd) == 0)
 		{
 			if (cmd[0][0] == '<' && !cmd[0][1])
@@ -173,7 +173,7 @@ int ft_one(char **split_pipe, char **envp, int *code_caractere)
 			ft_check_quote(cmd, i);
 			i++;
 		}
-    	execute_inbuilt(cmd);
+    	execute_inbuilt(cmd, envp);
 		if (ft_check_builtins(cmd) == 0)
 		{
 			if (cmd[0][0] == '<' && !cmd[0][1])

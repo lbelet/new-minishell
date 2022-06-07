@@ -287,7 +287,7 @@ int ft_giant_pipex(char **split_pipe, int nbr_cmd, char **envp, int * code_carac
 					close(fd[j][1]);	
 					j++;
 				}
-				execute_inbuilt(cmd);
+				execute_inbuilt(cmd, envp);
 				exit(0);
 			}
 		}

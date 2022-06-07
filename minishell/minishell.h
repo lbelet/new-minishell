@@ -17,11 +17,20 @@
 #include <readline/history.h>
 #include <signal.h>
 #include <limits.h>
+#include <dirent.h>
+
+typedef struct s_env
+{
+    char    **envp;
+    char    **env_var;
+    char    *pwd;
+    char    *oldpwd;
+}          t_env;
 
 void    display_prompt(int num);
 void    define_input_signals(void);
 int    echo(char **cmd_test);
-int    execute_inbuilt(char **cmd_test);
+int    execute_inbuilt(char **cmd_test, char **envp);
 int *ft_code_caractere(char *str);
 void  ft_process_onlyone(char *path_cmd, char **cmd, char **envp);
 int ft_process_one_classic(int *pid, char **cmd, char **envp);
