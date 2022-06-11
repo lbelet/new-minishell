@@ -11,6 +11,8 @@ int ft_check_builtins(char **cmd)
         return (1);
     else if (ft_strncmp(cmd[0], "cd", 2) == 0)
         return (1);
+    else if (ft_strncmp(cmd[0], "export", 6) == 0)
+        return (1);
     return (0);
 }
 
@@ -244,7 +246,7 @@ int    ft_isspace(int c)
     return (false);
 }
 
-long    ft_atol(const char *str)
+long long   ft_atol(char *str)
 {
     long long    n;
     int            is_negative;
@@ -268,49 +270,57 @@ long    ft_atol(const char *str)
             return (-1);
         str++;
     }
+//    if (ft_strcmp(str, "-9223372036854775808") == 0)
+//        return (-9223372036854775808);
     return (n * is_negative);
 }
 
-//static bool    is_valid_exit_arg(char *args[])
-//{
-//    int    i;
-//    int    j;
-//
-//    i = 0;
-//    while (args && args[i])
-//    {
-//        j = 0;
-//        while (args[i][j])
-//        {
-//            if (ft_issign(args[i][j]))
-//                j++;
-//            if (!ft_isdigit(args[i][j]))
-//                return (false);
-//            j++;
-//        }
-//        i++;
-//    }
-//    return (true);
-//}
+static bool    is_valid_exit_arg(char *args[])
+{
+    int    i;
+    int    j;
+
+    i = 0;
+    while (args && args[i])
+    {
+        j = 0;
+        while (args[i][j])
+        {
+            if (ft_issign(args[i][j]))
+                j++;
+            if (!ft_isdigit(args[i][j]))
+                return (false);
+            j++;
+        }
+        i++;
+    }
+    return (true);
+}
 
 int    exit_inbuilt(char *args[])
 {
-    long    exit_code;
+    long long   exit_code;
     int        i;
 
-    i = 0;
-    if (ft_strncmp(args[i], "exit", ft_strlen(args[i])) != 0)
-        return (EXIT_FAILURE);
-    i++;
+    i = 1;
+//    if (ft_strncmp(args[i], "exit", ft_strlen(args[i])) != 0)
+//        return (EXIT_FAILURE);
+    if (!args[1])
+    {
+        printf("exit\n");
+        exit_code = 0;
+        exit(exit_code);
+        return (exit_code);
+    }
     if (args[i])
         exit_code = ft_atol(args[i]);
     else
         exit_code = get_err_code();
-    //if (!is_valid_exit_arg(args + i) || ft_strlen(args[i]) > 19)
-    //{
-    //    printf("exit: not a valid argument\n");
-    //    exit_code = 255;
-    //}
+    if (!is_valid_exit_arg(args + i) || ft_strlen(args[i]) > 20)
+    {
+        printf("exit: not a valid argument\n");
+        exit_code = 255;
+    }
     //else if (args[i] && args[++i])
     //{
     //    printf("exit: too many arguments\n");
@@ -342,33 +352,110 @@ int    pwd(void)
 
 // ==========================================================================================
 
-/*int    env(char **argv)
+void ft_sort_alpha(char **envp, char **env_export, int i)
 {
-    int        i;
-    t_env    *envv;
+    int k;
+    int j;
+    char *tmp;
 
-    envv = get_envv();
-    if (envv == NULL || envv->env_var == NULL)
-        return (EXIT_FAILURE);
-    if (argv != NULL && argv[0] != NULL)
+    k = 0;
+    j = 0;
+    while (envp[j])
     {
-        if (access(argv[0], F_OK) == 0)//fonction autorisée
+        env_export[j] = ft_strdup(envp[j]);
+        j++;
+    }
+    env_export[j] = NULL;
+    j = 0;
+    while (k < i)
+    {
+        j = 0;
+        while (j < i)
         {
-            printf("env: %s: Premission denied\n", argv[0]);
-            return (126);//command invoked cannot execute (permission problem or not an executable)
+            if (ft_strcmp(env_export[k], env_export[j]) < 0)
+            {
+                tmp = ft_strdup(env_export[k]);
+                free(env_export[k]);
+                env_export[k] = ft_strdup(env_export[j]);
+                free(env_export[j]);
+                env_export[j] = ft_strdup(tmp);
+                free(tmp);
+            }
+            j++;
         }
-        printf("env: %s: No such file or directory\n", argv[0]);
-        return (127);//command not found
+        k++;
+    }
+}
+
+
+int ft_export(char **cmd_test, char **envp)
+{
+    printf("salut\n");
+    int i;
+    int j;
+    int k;
+    char **env_export;
+    char **variables;
+    char **variables_finales;
+    
+    k = 0;
+    j = 1;
+    if (!cmd_test[j])
+    {
+        i = 0;
+        while (envp[i])
+            i++;
+        env_export = malloc((i + 1) * sizeof(char *));
+        env_export[i] = NULL;
+        ft_sort_alpha(envp, env_export, i);
+        i = 0;
+        while (env_export[i])
+        {
+            printf("declare -x %s\n", env_export[i]);
+            i++;
+        }
+        i = 0;
+        while (variables_finales[i])
+        {
+            printf("declare -x %s\n", variables_finales[i]);
+            i++;
+        }
+        return (0);
+    }
+    while (cmd_test[j])
+        j++;
+    variables = malloc((j) * sizeof(char *));
+    variables[j] = NULL;
+    variables_finales = malloc(j * sizeof(char *));
+    variables_finales[j] = NULL;
+    while (k < (j - 1))
+    {
+        variables[k] = ft_strdup(cmd_test[k + 1]);
+        k++;
     }
     i = 0;
-    while (envv->env_var && envv->env_var[i])
+    while (envp[i])
+        i++;
+    env_export = malloc((i + 1) * sizeof(char *));
+    env_export[i] = NULL;
+    ft_sort_alpha(envp, env_export, i);
+    i = 0;
+    while (env_export[i])
     {
-        printf("%s\n", envv->env_var[i]);
+        printf("declare -x %s\n", env_export[i]);
         i++;
     }
-    return (EXIT_SUCCESS);
+    ft_sort_alpha(variables, variables_finales, j - 1);
+    i = 0;
+    while (variables_finales[i])
+    {
+        printf("declare -x %s\n", variables_finales[i]);
+        i++;
+    }
+
+    return (0);
 }
-*/
+
 // ==========================================================================================
 
 int ft_env(char **envp)
@@ -393,7 +480,6 @@ int ft_cd(char **cmd_test, char **envp)
     char *temp;
     char *cwd;
     char *cwdbis;
- //   char **path_pwd;
 
     i = 0;
     cwd = NULL;
@@ -434,12 +520,6 @@ int ft_cd(char **cmd_test, char **envp)
         i++;
     }
     i = 0;
-//    while (envp[i])
-//    {
-//        free(envp[i]);
-//        i++;
-//    }
-    i = 0;
     while (copy_env[i])
     {
         envp[i] = ft_strdup(copy_env[i]);
@@ -454,8 +534,8 @@ void    execute_inbuilt(char **cmd_test, char **envp)
 {
     if ((ft_strncmp(cmd_test[0], "echo", 4)) == 0)
         echo(&(cmd_test[0]));
-//    if (ft_strcmp(cmd[0], "export") == 0)
-//        return (export(cmd));
+    if (ft_strncmp(cmd_test[0], "export", 6) == 0)
+        ft_export(cmd_test, envp);
     if (strncmp(cmd_test[0], "env", 3) == 0)
         ft_env(envp);
     if (ft_strncmp(cmd_test[0], "cd", 2) == 0)
