@@ -21,19 +21,14 @@ int *ft_code_caractere(char *str)
     while (str[i])
     {
         if (str[i] != 34 && str[i] != 39 && quotes == 0)
-            code_caractere[i] = 6;           
-        if (((str[i] != 34 && str[i] != 39) && quotes != 0) || 
-                (str[i] == 34 && quotes == 3) || (str[i] == 39 && quotes == 1))
+            code_caractere[i] = 6;
+        else
+        {           
             code_caractere[i] = 7;
-        if ((str[i] == 34 || str[i] == 39) && quotes == 0)
-        {
-            quotes = ft_subopen_code_caractere(str, i);
-            code_caractere[i] = 1;
-        }
-        else if ((str[i] == 34 && quotes == 1) || (str[i] == 39 && quotes == 3))
-        {
-            code_caractere[i] = 2;
-            quotes = 0;
+            if ((str[i] == 34 || str[i] == 39) && quotes == 0)
+                quotes = ft_subopen_code_caractere(str, i);
+            else if ((str[i] == 34 && quotes == 1) || (str[i] == 39 && quotes == 3))
+                quotes = 0;
         }
         i++;
     }

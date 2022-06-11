@@ -29,17 +29,17 @@ int ft_process_one_classic(int *pid, char **cmd, char **envp)
 	return (0);
 }
 
-int ft_process_one_classic_output(int *pid, char **cmd, char **redir, int *code_caractere, char **envp)
+int ft_process_one_classic_output(int *pid, char **cmd, char **redir, char **envp)
 {
 	char *path_cmd;
 	int fd_out;
 	char **file;
 
-	file = ft_split_modif(redir[1], ' ', code_caractere, 0);
+	file = ft_split_modif(redir[1], ' ', ft_code_caractere(redir[1]), 0);
 	fd_out = open(file[0], O_WRONLY | O_CREAT, 0777);
 	if (access(file[0], W_OK) != 0)
 	{
-		printf("Probleme d'access au fichier: %s\n", redir[1]);
+		printf("Probleme d'access au fichier: %s\n", file[0]);
 		return (0);
 	}
 	path_cmd = ft_path(cmd[0]);
@@ -55,39 +55,35 @@ int ft_process_one_classic_output(int *pid, char **cmd, char **redir, int *code_
 	return (0);
 }
 
-int ft_process_one_nosplit(int *pid, char **split_pipe, int *code_caractere, char **envp)
+int ft_process_one_nosplit(int *pid, char **cmd, char **envp)
 {
 	int i;
 	int nbr_cmd;
 	int fd_infile;
-	char **str;
 	char **cmd_infile;
-	char *path_cmd;
 
 	nbr_cmd = 0;
 	i = 0;
-	str = ft_split_modif(split_pipe[0], ' ', code_caractere, 0);
-	while (str[i])
+	while (cmd[i])
 		i++;
 	cmd_infile = malloc((i) * sizeof(char *));
 	while (nbr_cmd < i - 1)
 	{
-		cmd_infile[nbr_cmd] = ft_strdup(str[nbr_cmd + 1]);
+		cmd_infile[nbr_cmd] = ft_strdup(cmd[nbr_cmd + 1]);
 		nbr_cmd++;
 	}
 	cmd_infile[nbr_cmd] = NULL;
-	path_cmd = ft_path(cmd_infile[0]);
-	if (ft_cmd_error(path_cmd, cmd_infile, pid) == 0)
+	if (ft_cmd_error(ft_path(cmd_infile[0]), cmd_infile, pid) == 0)
 		return (0);
 	pid[0] = fork();
 	if (pid[0] < 0)
         return (0);
 	if (pid[0] == 0)
 	{
-		fd_infile = open(ft_substr(str[0], 1, ft_strlen(str[0]) - 1), O_RDONLY);
+		fd_infile = open(ft_substr(cmd[0], 1, ft_strlen(cmd[0]) - 1), O_RDONLY);
 		dup2(fd_infile, STDIN_FILENO);
 		close(fd_infile);
-		execve(path_cmd, cmd_infile, envp);
+		execve(ft_path(cmd_infile[0]), cmd_infile, envp);
 	}
 	waitpid(pid[0], NULL, 0);
 	return (0);
@@ -129,17 +125,60 @@ int ft_process_one_split(int *pid, char **cmd, char **envp)
 	return (0);
 }
 
-int ft_one(char **split_pipe, char **envp, int *code_caractere)
+void ft_no_output(char **cmd, int *pid, char **envp)
+{
+	int i;
+
+	i = 0;
+	while (cmd[i])
+	{
+		ft_check_quote(cmd, i);
+		i++;
+	}
+   	execute_inbuilt(cmd, envp);
+	if (ft_check_builtins(cmd) == 0)
+	{
+		if (cmd[0][0] == '<' && !cmd[0][1])
+			ft_process_one_split(pid, cmd, envp);
+		if (cmd[0][0] == '<' && cmd[0][1])
+			ft_process_one_nosplit(pid, cmd, envp);
+		if (cmd[0][0] != '<')
+			ft_process_one_classic(pid, cmd, envp);
+	}
+}
+
+void ft_output(char **redir, int *pid, char **envp)
+{
+	int i;
+	char **cmd;
+
+	i = 0;
+	cmd = ft_split_modif(redir[0], ' ', ft_code_caractere(redir[0]), 0);
+	while (cmd[i])
+	{
+		ft_check_quote(cmd, i);
+		i++;
+	}
+   	execute_inbuilt(cmd, envp);
+	if (ft_check_builtins(cmd) == 0)
+	{
+		if (cmd[0][0] == '<' && !cmd[0][1])
+			ft_process_one_split(pid, cmd, envp);
+		if (cmd[0][0] == '<' && cmd[0][1])
+			ft_process_one_nosplit(pid, cmd, envp);
+		if (cmd[0][0] != '<')
+			ft_process_one_classic_output(pid, cmd, redir, envp);
+	}
+}
+
+void ft_one(char **split_pipe, char **envp, int *code_caractere)
 {
 	int *pid;
 	char **cmd;
 	char **redir;
-	int i;
 	int j;
 
 	j = 0;
-	i = 0;
-	pid = NULL;
 	pid = malloc(sizeof(int));
 	redir = ft_split_modif(split_pipe[0], '>', code_caractere, 0);
 	while (redir[j])
@@ -148,42 +187,8 @@ int ft_one(char **split_pipe, char **envp, int *code_caractere)
 	{
 		free(redir);
     	cmd = ft_split_modif(split_pipe[0], ' ', code_caractere, 0);
-		while (cmd[i])
-		{
-			ft_check_quote(cmd, i);
-			i++;
-		}
-    	execute_inbuilt(cmd, envp);
-		if (ft_check_builtins(cmd) == 0)
-		{
-			if (cmd[0][0] == '<' && !cmd[0][1])
-				ft_process_one_split(pid, cmd, envp);
-			if (cmd[0][0] == '<' && cmd[0][1])
-				ft_process_one_nosplit(pid, split_pipe, code_caractere, envp);
-			if (cmd[0][0] != '<')
-				ft_process_one_classic(pid, cmd, envp);
-		}
-    	return (0);
+		ft_no_output(cmd, pid, envp);
 	}
 	if (j > 1)
-	{
-		cmd = ft_split_modif(redir[0], ' ', code_caractere, 0);
-		while (cmd[i])
-		{
-			ft_check_quote(cmd, i);
-			i++;
-		}
-    	execute_inbuilt(cmd, envp);
-		if (ft_check_builtins(cmd) == 0)
-		{
-			if (cmd[0][0] == '<' && !cmd[0][1])
-				ft_process_one_split(pid, cmd, envp);
-			if (cmd[0][0] == '<' && cmd[0][1])
-				ft_process_one_nosplit(pid, split_pipe, code_caractere, envp);
-			if (cmd[0][0] != '<')
-				ft_process_one_classic_output(pid, cmd, redir, code_caractere, envp);
-		}
-    	return (0);
-	}
-	return (0);
+		ft_output(redir, pid, envp);
 }

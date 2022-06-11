@@ -30,13 +30,13 @@ typedef struct s_env
 void    display_prompt(int num);
 void    define_input_signals(void);
 int    echo(char **cmd_test);
-int    execute_inbuilt(char **cmd_test, char **envp);
+void    execute_inbuilt(char **cmd_test, char **envp);
 int *ft_code_caractere(char *str);
 void  ft_process_onlyone(char *path_cmd, char **cmd, char **envp);
 int ft_process_one_classic(int *pid, char **cmd, char **envp);
-int ft_process_one_nosplit(int *pid, char **split_pipe, int *code_caractere, char **envp);
+int ft_process_one_nosplit(int *pid, char **cmd, char **envp);
 int ft_process_one_split(int *pid, char **cmd, char **envp);
-int ft_one(char **split_pipe, char **envp, int *code_caractere);
+void ft_one(char **split_pipe, char **envp, int *code_caractere);
 void  ft_process_first(int fd_in, int fd_out, char *path_cmd, char **cmd, char **envp);
 int  ft_process_middle(int fd_in, int fd_out, char *path_cmd, char **cmd, char **envp);
 void  ft_process_last(int fd_in, int fd_out, char *path_cmd, char **cmd, char **envp);

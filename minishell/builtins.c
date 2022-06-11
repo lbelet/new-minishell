@@ -386,13 +386,18 @@ int ft_env(char **envp)
 
 // ==========================================================================================
 
-int ft_cd(char **envp)
+int ft_cd(char **cmd_test, char **envp)
 {
     int i;
     char **copy_env;
     char *temp;
+    char *cwd;
+    char *cwdbis;
+ //   char **path_pwd;
 
     i = 0;
+    cwd = NULL;
+    cwdbis = NULL;
     while (envp[i])
         i++;
     copy_env = malloc((i + 1) * sizeof(char *));
@@ -403,6 +408,13 @@ int ft_cd(char **envp)
         i++;
     }
     copy_env[i] = NULL;
+    cwd = getcwd(cwd, 0);
+    if (cmd_test[1])
+        chdir(cmd_test[1]);
+    else if (!cmd_test[1])
+        chdir("/Users/lbelet");
+    cwdbis = getcwd(cwdbis, 0);
+
     i = 0;
     while (copy_env[i])
     {
@@ -410,7 +422,14 @@ int ft_cd(char **envp)
         {
             temp = ft_strdup(copy_env[i]);
             free(copy_env[i]);
-            copy_env[i] = ft_strdup("PWD=/Users/lbelet/Desktop/new-minishell-main");
+            copy_env[i] = ft_strdup("PWD=");
+            copy_env[i] = ft_strjoin(copy_env[i], cwdbis);
+        }
+        if (ft_strncmp(copy_env[i], "OLDPWD", 6) == 0)
+        {
+            free(copy_env[i]);
+            copy_env[i] = ft_strdup("OLDPWD=");
+            copy_env[i] = ft_strjoin(copy_env[i], cwd);
         }
         i++;
     }
@@ -431,36 +450,20 @@ int ft_cd(char **envp)
 
 // ========================================================================================
 
-int    execute_inbuilt(char **cmd_test, char **envp)
+void    execute_inbuilt(char **cmd_test, char **envp)
 {
     if ((ft_strncmp(cmd_test[0], "echo", 4)) == 0)
-    {
         echo(&(cmd_test[0]));
-        return (1);
-    }
 //    if (ft_strcmp(cmd[0], "export") == 0)
 //        return (export(cmd));
     if (strncmp(cmd_test[0], "env", 3) == 0)
-    {
         ft_env(envp);
-        return (0);
-    }
     if (ft_strncmp(cmd_test[0], "cd", 2) == 0)
-    {
-        ft_cd(envp);
-        return (0);
-    }
+        ft_cd(cmd_test, envp);
 //    if (ft_strcmp(cmd[0], "unset") == 0)
 //        return (unset(cmd));
     if (ft_strncmp(cmd_test[0], "pwd", 3) == 0)
-    {
         pwd();
-        return (1);
-    }
     if ((ft_strncmp(cmd_test[0], "exit", 4)) == 0)
-    {
         exit_inbuilt(&(cmd_test[0]));
-        return (1);
-    }
-   return (0);
 }
