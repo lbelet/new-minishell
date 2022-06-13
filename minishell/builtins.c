@@ -352,33 +352,78 @@ int    pwd(void)
 
 // ==========================================================================================
 
-void ft_sort_alpha(char **envp, char **env_export, int i)
+int ft_nbr_args(char **cmd_test)
+{
+    int i;
+    int nbr_args;
+
+    i = 1;
+    nbr_args = 0;
+    while (cmd_test[i])
+    {
+        i++;
+        nbr_args++;
+    }
+    return (nbr_args);
+}
+
+char **ft_malloc_env(char **original)
+{
+    int i;
+    char **sorted;
+
+    i = 0;
+    while (original[i])
+        i++;
+    sorted = malloc((i + 1) *sizeof(char *));
+    sorted[i] = NULL;
+    return (sorted);
+}
+
+
+char **ft_malloc_var(char **original)
+{
+    int i;
+    char **sorted;
+
+    i = 1;
+    while (original[i])
+        i++;
+    sorted = malloc(i *sizeof(char *));
+    sorted[i - 1] = NULL;
+    return (sorted);
+}
+
+void ft_sort_alpha(char **original, char **sorted)
 {
     int k;
     int j;
+    int i;
     char *tmp;
 
     k = 0;
     j = 0;
-    while (envp[j])
+    i = 0;
+    while (original[i])
+        i++;
+    while (original[j])
     {
-        env_export[j] = ft_strdup(envp[j]);
+        sorted[j] = ft_strdup(original[j]);
         j++;
     }
-    env_export[j] = NULL;
     j = 0;
     while (k < i)
     {
         j = 0;
         while (j < i)
         {
-            if (ft_strcmp(env_export[k], env_export[j]) < 0)
+            if (ft_strcmp(sorted[k], sorted[j]) < 0)
             {
-                tmp = ft_strdup(env_export[k]);
-                free(env_export[k]);
-                env_export[k] = ft_strdup(env_export[j]);
-                free(env_export[j]);
-                env_export[j] = ft_strdup(tmp);
+                tmp = ft_strdup(sorted[k]);
+                free(sorted[k]);
+                sorted[k] = ft_strdup(sorted[j]);
+                free(sorted[j]);
+                sorted[j] = ft_strdup(tmp);
                 free(tmp);
             }
             j++;
@@ -387,72 +432,63 @@ void ft_sort_alpha(char **envp, char **env_export, int i)
     }
 }
 
+void ft_printf_all(char **sorted)
+{
+    int i;
+
+    i = 0;
+    while (sorted[i])
+    {
+        printf("declare -x %s\n", sorted[i]);
+        i++;
+    }  
+}
 
 int ft_export(char **cmd_test, char **envp)
 {
-    printf("salut\n");
     int i;
-    int j;
-    int k;
-    char **env_export;
-    char **variables;
-    char **variables_finales;
-    
-    k = 0;
-    j = 1;
-    if (!cmd_test[j])
-    {
-        i = 0;
-        while (envp[i])
-            i++;
-        env_export = malloc((i + 1) * sizeof(char *));
-        env_export[i] = NULL;
-        ft_sort_alpha(envp, env_export, i);
-        i = 0;
-        while (env_export[i])
-        {
-            printf("declare -x %s\n", env_export[i]);
-            i++;
-        }
-        i = 0;
-        while (variables_finales[i])
-        {
-            printf("declare -x %s\n", variables_finales[i]);
-            i++;
-        }
-        return (0);
-    }
-    while (cmd_test[j])
-        j++;
-    variables = malloc((j) * sizeof(char *));
-    variables[j] = NULL;
-    variables_finales = malloc(j * sizeof(char *));
-    variables_finales[j] = NULL;
-    while (k < (j - 1))
-    {
-        variables[k] = ft_strdup(cmd_test[k + 1]);
-        k++;
-    }
-    i = 0;
-    while (envp[i])
-        i++;
-    env_export = malloc((i + 1) * sizeof(char *));
-    env_export[i] = NULL;
-    ft_sort_alpha(envp, env_export, i);
-    i = 0;
-    while (env_export[i])
-    {
-        printf("declare -x %s\n", env_export[i]);
-        i++;
-    }
-    ft_sort_alpha(variables, variables_finales, j - 1);
-    i = 0;
-    while (variables_finales[i])
-    {
-        printf("declare -x %s\n", variables_finales[i]);
-        i++;
-    }
+    char **envp_sorted;
+    char **args_sorted;
+    char **new_args;
+    static char **args = NULL;
 
+    i = 0;
+    envp_sorted = ft_malloc_env(envp);
+    if (!envp_sorted)
+        return (0);
+    if (ft_nbr_args(cmd_test) == 0)
+    {
+        ft_sort_alpha(envp, envp_sorted);
+        ft_printf_all(envp_sorted);
+        if (args)
+            ft_printf_all(args);
+    }
+    if (ft_nbr_args(cmd_test) > 0)
+    {
+        new_args = ft_malloc_var(cmd_test);
+        if (!new_args)
+            return (0);
+        args_sorted = ft_malloc_var(cmd_test);
+        if (!args_sorted)
+            return (0);
+        while (i < ft_nbr_args(cmd_test))
+        {
+            new_args[i] = ft_strdup(cmd_test[i + 1]);
+            i++;
+        }
+        ft_sort_alpha(new_args, args_sorted);
+        if (!args)
+        {
+            args = ft_malloc_env(args_sorted);
+            i = 0;
+            while (args_sorted[i])
+            {
+                args[i] = ft_strdup(args_sorted[i]);
+                i++;
+            }
+        }
+//        ft_printf_all(args);
+    }
     return (0);
 }
 
